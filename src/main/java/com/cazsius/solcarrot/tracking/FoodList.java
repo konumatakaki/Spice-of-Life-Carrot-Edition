@@ -1,17 +1,16 @@
 package com.cazsius.solcarrot.tracking;
 
+import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.SOLCarrotConfig;
 import com.cazsius.solcarrot.api.FoodCapability;
-import com.cazsius.solcarrot.api.SOLCarrotAPI;
-import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
+import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,8 +23,7 @@ public final class FoodList implements FoodCapability {
 	private static final String NBT_KEY_FOOD_LIST = "foodList";
 	
 	public static FoodList get(Player player) {
-		return (FoodList) player.getCapability(SOLCarrotAPI.foodCapability)
-			.orElseThrow(FoodListNotFoundException::new);
+		return player.getData(SOLCarrot.FOOD_ATTACHMENT);
 	}
 	
 	private final Set<FoodInstance> foods = new HashSet<>();
@@ -34,17 +32,10 @@ public final class FoodList implements FoodCapability {
 	private ProgressInfo cachedProgressInfo;
 	
 	public FoodList() {}
-	
-	private final LazyOptional<FoodList> capabilityOptional = LazyOptional.of(() -> this);
-	
-	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-		return capability == SOLCarrotAPI.foodCapability ? capabilityOptional.cast() : LazyOptional.empty();
-	}
-	
+
 	/** used for persistent storage */
 	@Override
-	public CompoundTag serializeNBT() {
+	public CompoundTag serializeNBT(HolderLookup.Provider provider) {
 		var tag = new CompoundTag();
 		
 		var list = new ListTag();
@@ -57,10 +48,10 @@ public final class FoodList implements FoodCapability {
 		
 		return tag;
 	}
-	
+
 	/** used for persistent storage */
 	@Override
-	public void deserializeNBT(CompoundTag tag) {
+	public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
 		var list = tag.getList(NBT_KEY_FOOD_LIST, Tag.TAG_STRING);
 		
 		foods.clear();
@@ -75,16 +66,21 @@ public final class FoodList implements FoodCapability {
 	}
 	
 	/** @return true if the food was not previously known, i.e. if a new food has been tried */
-	public boolean addFood(Item food) {
-		boolean wasAdded = foods.add(new FoodInstance(food)) && SOLCarrotConfig.shouldCount(food);
+	public boolean addFood(ItemStack food) {
+		boolean wasAdded = foods.add(new FoodInstance(food.getItem())) && SOLCarrotConfig.shouldCount(food);
 		invalidateProgressInfo();
 		return wasAdded;
 	}
-	
+
 	@Override
 	public boolean hasEaten(Item food) {
-		if (!food.isEdible()) return false;
-		return foods.contains(new FoodInstance(food));
+		return hasEaten(food.getDefaultInstance());
+	}
+
+	@Override
+	public boolean hasEaten(ItemStack food) {
+		if (food.getFoodProperties(null) == null) return false;
+		return foods.contains(new FoodInstance(food.getItem()));
 	}
 	
 	public void clearFood() {
@@ -112,7 +108,7 @@ public final class FoodList implements FoodCapability {
 	public void invalidateProgressInfo() {
 		cachedProgressInfo = null;
 	}
-	
+
 	public static class FoodListNotFoundException extends RuntimeException {
 		public FoodListNotFoundException() {
 			super("Player must have food capability attached, but none was found.");

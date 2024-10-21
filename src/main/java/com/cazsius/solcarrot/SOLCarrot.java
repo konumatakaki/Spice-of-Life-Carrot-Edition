@@ -2,47 +2,51 @@ package com.cazsius.solcarrot;
 
 import com.cazsius.solcarrot.communication.FoodListMessage;
 import com.cazsius.solcarrot.item.SOLCarrotItems;
+import com.cazsius.solcarrot.tracking.FoodList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
+import java.util.function.Supplier;
+
+import static net.neoforged.fml.common.EventBusSubscriber.Bus.MOD;
 
 @Mod(SOLCarrot.MOD_ID)
-@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID, bus = MOD)
+@EventBusSubscriber(modid = SOLCarrot.MOD_ID, bus = MOD)
 public final class SOLCarrot {
 	public static final String MOD_ID = "solcarrot";
 	
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-	
-	private static final String PROTOCOL_VERSION = "1.0";
-	public static SimpleChannel channel = NetworkRegistry.ChannelBuilder
-		.named(resourceLocation("main"))
-		.clientAcceptedVersions(PROTOCOL_VERSION::equals)
-		.serverAcceptedVersions(PROTOCOL_VERSION::equals)
-		.networkProtocolVersion(() -> PROTOCOL_VERSION)
-		.simpleChannel();
-	
+
+	private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, MOD_ID);
+	public static final Supplier<AttachmentType<FoodList>> FOOD_ATTACHMENT = ATTACHMENT_TYPES.register("food", () ->
+			AttachmentType.serializable(FoodList::new).build());
+
 	public static ResourceLocation resourceLocation(String path) {
-		return new ResourceLocation(MOD_ID, path);
+		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 	}
-	
+
 	@SubscribeEvent
-	public static void setUp(FMLCommonSetupEvent event) {
-		channel.messageBuilder(FoodListMessage.class, 0)
-			.encoder(FoodListMessage::write)
-			.decoder(FoodListMessage::new)
-			.consumerMainThread(FoodListMessage::handle)
-			.add();
+	public static void setUp(RegisterPayloadHandlersEvent event) {
+		final PayloadRegistrar registrar = event.registrar(MOD_ID);
+
+		registrar.playToClient(FoodListMessage.ID, FoodListMessage.CODEC, FoodListMessage.Handler::handle);
 	}
 	
-	public SOLCarrot() {
-		SOLCarrotConfig.setUp();
-		SOLCarrotItems.setUp();
+	public SOLCarrot(IEventBus eventBus, ModContainer container, Dist dist) {
+		ATTACHMENT_TYPES.register(eventBus);
+		SOLCarrotConfig.setUp(container, dist);
+		SOLCarrotItems.setUp(eventBus);
 	}
 }

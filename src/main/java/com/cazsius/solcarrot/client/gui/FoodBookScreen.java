@@ -15,8 +15,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -141,11 +141,9 @@ public final class FoodBookScreen extends Screen implements PageFlipButton.Pagea
 	
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(graphics);
-		
-		UIElement.render(graphics, background, mouseX, mouseY);
-		
 		super.render(graphics, mouseX, mouseY, partialTicks);
+
+		UIElement.render(graphics, background, mouseX, mouseY);
 		
 		if (!pages.isEmpty()) { // might not be loaded yet; race condition
 			// current page

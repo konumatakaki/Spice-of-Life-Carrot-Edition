@@ -1,43 +1,47 @@
 package com.cazsius.solcarrot.communication;
 
+import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.tracking.FoodList;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+public record FoodListMessage(CompoundTag capabilityNBT) implements CustomPacketPayload {
+	public static final StreamCodec<RegistryFriendlyByteBuf, FoodListMessage> CODEC = CustomPacketPayload.codec(
+			FoodListMessage::write,
+			FoodListMessage::new);
+	public static final Type<FoodListMessage> ID = new Type<>(SOLCarrot.resourceLocation("food_list_message"));
 
-public final class FoodListMessage {
-	private CompoundTag capabilityNBT;
-	
-	public FoodListMessage(FoodList foodList) {
-		this.capabilityNBT = foodList.serializeNBT();
-	}
-	
 	public FoodListMessage(FriendlyByteBuf buffer) {
-		this.capabilityNBT = buffer.readNbt();
+		this(buffer.readNbt());
 	}
-	
+
+	public FoodListMessage(FoodList foodList, HolderLookup.Provider provider) {
+		this(foodList.serializeNBT(provider));
+	}
+
 	public void write(FriendlyByteBuf buffer) {
 		buffer.writeNbt(capabilityNBT);
 	}
-	
-	public void handle(Supplier<NetworkEvent.Context> context) {
-		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> Handler.handle(this, context));
+
+	@Override
+	public Type<? extends CustomPacketPayload> type() {
+		return ID;
 	}
 	
-	private static class Handler {
-		static void handle(FoodListMessage message, Supplier<NetworkEvent.Context> context) {
-			context.get().enqueueWork(() -> {
+	public static class Handler {
+		public static void handle(FoodListMessage message, IPayloadContext context) {
+			context.enqueueWork(() -> {
 				Player player = Minecraft.getInstance().player;
 				assert player != null;
-				FoodList.get(player).deserializeNBT(message.capabilityNBT);
+				FoodList.get(player).deserializeNBT(player.registryAccess(), message.capabilityNBT);
 			});
-			context.get().setPacketHandled(true);
 		}
 	}
 }

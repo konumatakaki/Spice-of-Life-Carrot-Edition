@@ -1,22 +1,22 @@
 package com.cazsius.solcarrot.api;
 
+import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.tracking.CapabilityHandler;
 import com.cazsius.solcarrot.tracking.FoodList;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.neoforged.neoforge.capabilities.EntityCapability;
 
 /**
  Provides a stable API for interfacing with Spice of Life: Carrot Edition.
  */
 public final class SOLCarrotAPI {
-	public static Capability<FoodCapability> foodCapability = CapabilityManager.get(new CapabilityToken<>() {});
-	
+	public static final EntityCapability<FoodCapability, Void> foodCapability = EntityCapability.createVoid(
+			SOLCarrot.resourceLocation("food"), FoodCapability.class);
+
 	private SOLCarrotAPI() {}
 	
 	/**
-	 Retrieves the {@link com.cazsius.solcarrot.api.FoodCapability} for the given player.
+	 Retrieves the {@link FoodCapability} for the given player.
 	 */
 	public static FoodCapability getFoodCapability(Player player) {
 		return FoodList.get(player);

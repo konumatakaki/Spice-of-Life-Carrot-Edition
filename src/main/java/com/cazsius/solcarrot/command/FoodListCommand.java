@@ -8,22 +8,23 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.Objects;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
-@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID)
+@EventBusSubscriber(modid = SOLCarrot.MOD_ID)
 public final class FoodListCommand {
 	private static final String name = "foodlist";
 	
@@ -71,12 +72,13 @@ public final class FoodListCommand {
 		sendFeedback(context.getSource(), localizedComponent("sync.success"));
 		return Command.SINGLE_SUCCESS;
 	}
-	
-	static int clearFoodList(CommandContext<CommandSourceStack> context, Player target) {
+
+	static final DynamicCommandExceptionType ERROR_NO_PERMISSION = new DynamicCommandExceptionType(object -> (Component)object);
+	static int clearFoodList(CommandContext<CommandSourceStack> context, Player target) throws CommandSyntaxException {
 		boolean isOp = context.getSource().hasPermission(2);
 		boolean isTargetingSelf = isTargetingSelf(context, target);
 		if (!isOp && !isTargetingSelf)
-			throw new CommandRuntimeException(localizedComponent("no_permissions"));
+			throw ERROR_NO_PERMISSION.create(localizedComponent("no_permissions"));
 		
 		FoodList.get(target).clearFood();
 		CapabilityHandler.syncFoodList(target);

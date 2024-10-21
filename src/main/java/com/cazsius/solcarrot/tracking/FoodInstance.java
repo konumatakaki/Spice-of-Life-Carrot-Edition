@@ -1,9 +1,9 @@
 package com.cazsius.solcarrot.tracking;
 
 import com.cazsius.solcarrot.SOLCarrot;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -17,17 +17,17 @@ public final class FoodInstance {
 	
 	@Nullable
 	public static FoodInstance decode(String encoded) {
-		ResourceLocation name = new ResourceLocation(encoded);
+		ResourceLocation name = ResourceLocation.tryParse(encoded);
 		
 		// TODO it'd be nice to store (and maybe even count) references to missing items, in case the mod is added back in later
-		Item item = ForgeRegistries.ITEMS.getValue(name);
+		Item item = BuiltInRegistries.ITEM.get(name);
 		if (item == null) {
-			SOLCarrot.LOGGER.warn("attempting to load item into food list that is no longer registered: " + encoded + " (removing from list)");
+            SOLCarrot.LOGGER.warn("attempting to load item into food list that is no longer registered: {} (removing from list)", encoded);
 			return null;
 		}
 		
-		if (!item.isEdible()) {
-			SOLCarrot.LOGGER.warn("attempting to load item into food list that is no longer edible: " + encoded + " (ignoring in case it becomes edible again later)");
+		if (item.getDefaultInstance().getFoodProperties(null) == null) {
+            SOLCarrot.LOGGER.warn("attempting to load item into food list that is no longer edible: {} (ignoring in case it becomes edible again later)", encoded);
 		}
 		
 		return new FoodInstance(item);
@@ -35,7 +35,7 @@ public final class FoodInstance {
 	
 	@Nullable
 	public String encode() {
-		return Optional.ofNullable(ForgeRegistries.ITEMS.getKey(item))
+		return Optional.ofNullable(BuiltInRegistries.ITEM.getKey(item))
 			.map(ResourceLocation::toString)
 			.orElse(null);
 	}

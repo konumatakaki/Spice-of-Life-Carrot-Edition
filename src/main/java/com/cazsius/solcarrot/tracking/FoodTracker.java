@@ -4,26 +4,21 @@ import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.SOLCarrotConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameType;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 
 import static com.cazsius.solcarrot.lib.Localization.localizedComponent;
 import static com.cazsius.solcarrot.lib.Localization.localizedQuantityComponent;
 
-@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID)
+@EventBusSubscriber(modid = SOLCarrot.MOD_ID)
 public final class FoodTracker {
 	@SubscribeEvent
 	public static void onFoodEaten(LivingEntityUseItemEvent.Finish event) {
@@ -32,12 +27,12 @@ public final class FoodTracker {
 		var isClientSide = player.level().isClientSide;
 		
 		if (SOLCarrotConfig.limitProgressionToSurvival() && player.isCreative()) return;
-		
-		var usedItem = event.getItem().getItem();
-		if (!usedItem.isEdible()) return;
+
+		var usedStack = event.getItem();
+		if (usedStack.getFoodProperties(player) == null) return;
 		
 		FoodList foodList = FoodList.get(player);
-		boolean hasTriedNewFood = foodList.addFood(usedItem);
+		boolean hasTriedNewFood = foodList.addFood(usedStack);
 		
 		// check this before syncing, because the sync entails an hp update
 		boolean newMilestoneReached = MaxHealthHandler.updateFoodHPModifier(player);

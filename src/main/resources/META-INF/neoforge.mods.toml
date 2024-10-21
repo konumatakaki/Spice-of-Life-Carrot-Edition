@@ -22,8 +22,8 @@ Instead of using the stick, we use the carrot!
 
 # Dependencies are optional.
 [[dependencies.solcarrot]]
-	modId = "forge"
-	mandatory = true
-	versionRange = "[${loader_version},)"
+	modId = "neoforge"
+	type = "required"
+	versionRange = "${neo_range}"
 	ordering = "NONE" # BEFORE or AFTER required if the relationship is not mandatory
 	side = "BOTH" # BOTH, CLIENT or SERVER

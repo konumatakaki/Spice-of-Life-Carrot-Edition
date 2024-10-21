@@ -2,23 +2,23 @@ package com.cazsius.solcarrot.tracking;
 
 import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.SOLCarrotConfig;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.UUID;
 
-@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID)
+@EventBusSubscriber(modid = SOLCarrot.MOD_ID)
 public final class MaxHealthHandler {
 	private static final boolean HAS_FIRST_AID = ModList.get().isLoaded("firstaid");
-	private static final UUID MILESTONE_HEALTH_MODIFIER_ID = UUID.fromString("b20d3436-0d39-4868-96ab-d0a4856e68c6");
+	private static final ResourceLocation MILESTONE_HEALTH_MODIFIER_ID = SOLCarrot.resourceLocation("health_gained");
 	
 	@SubscribeEvent
 	public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
@@ -44,14 +44,13 @@ public final class MaxHealthHandler {
 		int addedHealthFromFood = milestonesAchieved * 2 * SOLCarrotConfig.getHeartsPerMilestone();
 		
 		double totalHealthModifier = healthPenalty + addedHealthFromFood;
-		boolean hasChanged = prevModifier == null || prevModifier.getAmount() != totalHealthModifier;
+		boolean hasChanged = prevModifier == null || prevModifier.amount() != totalHealthModifier;
 		
 		if (!player.level().isClientSide) {
 			AttributeModifier modifier = new AttributeModifier(
 				MILESTONE_HEALTH_MODIFIER_ID,
-				"Health Gained from Trying New Foods",
 				totalHealthModifier,
-				AttributeModifier.Operation.ADDITION
+				AttributeModifier.Operation.ADD_VALUE
 			);
 			
 			updateHealthModifier(player, modifier);

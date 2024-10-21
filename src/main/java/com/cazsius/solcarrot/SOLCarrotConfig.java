@@ -3,20 +3,23 @@ package com.cazsius.solcarrot;
 import com.cazsius.solcarrot.tracking.CapabilityHandler;
 import com.cazsius.solcarrot.tracking.FoodList;
 import com.google.common.collect.Lists;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
-import net.minecraftforge.common.ForgeConfigSpec.Builder;
-import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
-import net.minecraftforge.common.ForgeConfigSpec.IntValue;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
+import net.neoforged.neoforge.common.ModConfigSpec.Builder;
+import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -25,36 +28,39 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
+import static net.neoforged.fml.common.EventBusSubscriber.Bus.MOD;
 
-@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID, bus = MOD)
+@EventBusSubscriber(modid = SOLCarrot.MOD_ID, bus = MOD)
 public final class SOLCarrotConfig {
 	private static String localizationPath(String path) {
 		return "config." + SOLCarrot.MOD_ID + "." + path;
 	}
 	
 	public static final Server SERVER;
-	public static final ForgeConfigSpec SERVER_SPEC;
+	public static final ModConfigSpec SERVER_SPEC;
 	
 	static {
-		Pair<Server, ForgeConfigSpec> specPair = new Builder().configure(Server::new);
+		Pair<Server, ModConfigSpec> specPair = new Builder().configure(Server::new);
 		SERVER = specPair.getLeft();
 		SERVER_SPEC = specPair.getRight();
 	}
 	
 	public static final Client CLIENT;
-	public static final ForgeConfigSpec CLIENT_SPEC;
+	public static final ModConfigSpec CLIENT_SPEC;
 	
 	static {
-		Pair<Client, ForgeConfigSpec> specPair = new Builder().configure(Client::new);
+		Pair<Client, ModConfigSpec> specPair = new Builder().configure(Client::new);
 		CLIENT = specPair.getLeft();
 		CLIENT_SPEC = specPair.getRight();
 	}
 	
-	public static void setUp() {
-		ModLoadingContext context = ModLoadingContext.get();
-		context.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
-		context.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC);
+	public static void setUp(ModContainer container, Dist dist) {
+		container.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
+		container.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC);
+
+		if (dist.isClient()) {
+			container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+		}
 	}
 	
 	@SubscribeEvent
@@ -104,10 +110,10 @@ public final class SOLCarrotConfig {
 	public static class Server {
 		public final IntValue baseHearts;
 		public final IntValue heartsPerMilestone;
-		public final ConfigValue<List<? extends Integer>> milestones;
+		public final ModConfigSpec.ConfigValue<List<? extends Integer>> milestones;
 		
-		public final ConfigValue<List<? extends String>> blacklist;
-		public final ConfigValue<List<? extends String>> whitelist;
+		public final ModConfigSpec.ConfigValue<List<? extends String>> blacklist;
+		public final ModConfigSpec.ConfigValue<List<? extends String>> whitelist;
 		public final IntValue minimumFoodValue;
 		
 		public final BooleanValue shouldResetOnDeath;
@@ -129,7 +135,7 @@ public final class SOLCarrotConfig {
 			milestones = builder
 				.translation(localizationPath("milestones"))
 				.comment("A list of numbers of unique foods you need to eat to unlock each milestone, in ascending order. Naturally, adding more milestones lets you earn more hearts.")
-				.defineList("milestones", Lists.newArrayList(5, 10, 15, 20, 25), e -> e instanceof Integer);
+				.defineList("milestones", Lists.newArrayList(5, 10, 15, 20, 25), () -> 5, e -> e instanceof Integer);
 			
 			builder.pop();
 			builder.push("filtering");
@@ -137,12 +143,12 @@ public final class SOLCarrotConfig {
 			blacklist = builder
 				.translation(localizationPath("blacklist"))
 				.comment("Foods in this list won't affect the player's health nor show up in the food book.")
-				.defineList("blacklist", Lists.newArrayList(), e -> e instanceof String);
+				.defineList("blacklist", Lists.newArrayList(), () -> "", e -> e instanceof String);
 			
 			whitelist = builder
 				.translation(localizationPath("whitelist"))
 				.comment("When this list contains anything, the blacklist is ignored and instead only foods from here count.")
-				.defineList("whitelist", Lists.newArrayList(), e -> e instanceof String);
+				.defineList("whitelist", Lists.newArrayList(), () -> "", e -> e instanceof String);
 			
 			minimumFoodValue = builder
 				.translation(localizationPath("minimum_food_value"))
@@ -258,22 +264,30 @@ public final class SOLCarrotConfig {
 	}
 	
 	public static boolean isAllowed(Item food) {
-		String id = Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(food)).toString();
+		String id = Objects.requireNonNull(BuiltInRegistries.ITEM.getKey(food)).toString();
 		if (hasWhitelist()) {
-			return matchesAnyPattern(id, SERVER.whitelist.get());
+			return matchesAnyPattern(id, getWhitelist());
 		} else {
-			return !matchesAnyPattern(id, SERVER.blacklist.get());
+			return !matchesAnyPattern(id,getBlacklist());
 		}
 	}
-	
+
 	public static boolean shouldCount(Item food) {
-		return isHearty(food) && isAllowed(food);
+		return shouldCount(food.getDefaultInstance());
 	}
-	
-	public static boolean isHearty(Item food) {
-		var foodInfo = food.getFoodProperties();
+
+	public static boolean shouldCount(ItemStack food) {
+		return isHearty(food) && isAllowed(food.getItem());
+	}
+
+	public static boolean isHearty(ItemStack food) {
+		var foodInfo = food.getFoodProperties(null);
 		if (foodInfo == null) return false;
-		return foodInfo.getNutrition() >= SERVER.minimumFoodValue.get();
+		return foodInfo.nutrition() >= SERVER.minimumFoodValue.get();
+	}
+
+	public static boolean isHearty(Item food) {
+		return isHearty(food.getDefaultInstance());
 	}
 	
 	private static boolean matchesAnyPattern(String query, Collection<? extends String> patterns) {

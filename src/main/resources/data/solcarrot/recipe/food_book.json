@@ -5,6 +5,7 @@
 		{ "item": "minecraft:carrot" }
 	],
 	"result": {
-		"item": "solcarrot:food_book"
+		"count": 1,
+		"id": "solcarrot:food_book"
 	}
 }
