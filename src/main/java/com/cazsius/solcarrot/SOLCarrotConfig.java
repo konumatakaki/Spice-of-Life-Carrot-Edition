@@ -268,7 +268,7 @@ public final class SOLCarrotConfig {
 		if (hasWhitelist()) {
 			return matchesAnyPattern(id, getWhitelist());
 		} else {
-			return !matchesAnyPattern(id,getBlacklist());
+			return !matchesAnyPattern(id, getBlacklist());
 		}
 	}
 
