@@ -32,7 +32,7 @@ public final class SOLCarrot {
 	private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, MOD_ID);
 	public static final Supplier<AttachmentType<FoodList>> FOOD_ATTACHMENT = ATTACHMENT_TYPES.register("food", () ->
 			AttachmentType.serializable(FoodList::new).build());
-
+	
 	public static ResourceLocation resourceLocation(String path) {
 		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 	}
