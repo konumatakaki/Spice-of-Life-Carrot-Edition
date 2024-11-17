@@ -3,25 +3,25 @@ package com.cazsius.solcarrot.client;
 import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.SOLCarrotConfig;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
+import static net.neoforged.fml.common.EventBusSubscriber.Bus.MOD;
 
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(value = Dist.CLIENT, modid = SOLCarrot.MOD_ID, bus = MOD)
+@EventBusSubscriber(value = Dist.CLIENT, modid = SOLCarrot.MOD_ID, bus = MOD)
 public final class FoodItems {
 	private static List<Item> foodsBeforeBlacklist;
 	private static List<Item> foods;
@@ -39,8 +39,8 @@ public final class FoodItems {
 	
 	@SubscribeEvent
 	public static void setUp(FMLLoadCompleteEvent event) {
-		foodsBeforeBlacklist = ForgeRegistries.ITEMS.getValues().stream()
-			.filter(Item::isEdible)
+		foodsBeforeBlacklist = BuiltInRegistries.ITEM.stream()
+			.filter((item) -> item.getDefaultInstance().getFoodProperties(null) != null)
 			// sort by name
 			.sorted(Comparator.comparing(food -> I18n.get(food.getDescriptionId() + ".name")))
 			.collect(Collectors.toList());

@@ -2,40 +2,31 @@ package com.cazsius.solcarrot.tracking;
 
 import com.cazsius.solcarrot.SOLCarrot;
 import com.cazsius.solcarrot.SOLCarrotConfig;
-import com.cazsius.solcarrot.api.FoodCapability;
+import com.cazsius.solcarrot.api.SOLCarrotAPI;
 import com.cazsius.solcarrot.communication.FoodListMessage;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkDirection;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
+import static net.neoforged.fml.common.EventBusSubscriber.Bus.MOD;
 
-@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID)
+@EventBusSubscriber(modid = SOLCarrot.MOD_ID)
 public final class CapabilityHandler {
 	private static final ResourceLocation FOOD = SOLCarrot.resourceLocation("food");
 	
-	@Mod.EventBusSubscriber(modid = SOLCarrot.MOD_ID, bus = MOD)
+	@EventBusSubscriber(modid = SOLCarrot.MOD_ID, bus = MOD)
 	private static final class Setup {
 		@SubscribeEvent
 		public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-			event.register(FoodCapability.class);
+			event.registerEntity(SOLCarrotAPI.foodCapability, EntityType.PLAYER, (player, ctx) -> player.getData(SOLCarrot.FOOD_ATTACHMENT.get()));
 		}
 	}
-	
-	@SubscribeEvent
-	public static void attachPlayerCapability(AttachCapabilitiesEvent<Entity> event) {
-		if (!(event.getObject() instanceof Player)) return;
-		
-		event.addCapability(FOOD, new FoodList());
-	}
-	
+
 	@SubscribeEvent
 	public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
 		// server needs to send any loaded data to the client
@@ -52,13 +43,8 @@ public final class CapabilityHandler {
 		if (event.isWasDeath() && SOLCarrotConfig.shouldResetOnDeath()) return;
 		
 		var originalPlayer = event.getOriginal();
-		originalPlayer.reviveCaps(); // so we can access the capabilities; entity will get removed either way
 		var original = FoodList.get(originalPlayer);
-		var newInstance = FoodList.get(event.getEntity());
-		newInstance.deserializeNBT(original.serializeNBT());
-		// can't sync yet; client hasn't attached capabilities yet
-		
-		originalPlayer.invalidateCaps();
+		event.getEntity().setData(SOLCarrot.FOOD_ATTACHMENT, original);
 	}
 	
 	@SubscribeEvent
@@ -67,15 +53,12 @@ public final class CapabilityHandler {
 	}
 	
 	public static void syncFoodList(Player player) {
-		if (player.level().isClientSide) return;
-		
-		var target = (ServerPlayer) player;
-		SOLCarrot.channel.sendTo(
-			new FoodListMessage(FoodList.get(player)),
-			target.connection.connection,
-			NetworkDirection.PLAY_TO_CLIENT
-		);
-		
+		if (player instanceof ServerPlayer target) {
+			target.connection.send(
+				new FoodListMessage(FoodList.get(player), player.registryAccess())
+			);
+		}
+
 		MaxHealthHandler.updateFoodHPModifier(player);
 	}
 }

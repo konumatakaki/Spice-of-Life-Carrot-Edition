@@ -6,18 +6,18 @@ import com.cazsius.solcarrot.tracking.FoodList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 import static com.cazsius.solcarrot.lib.Localization.localizedComponent;
 
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(value = Dist.CLIENT, modid = SOLCarrot.MOD_ID)
+@EventBusSubscriber(value = Dist.CLIENT, modid = SOLCarrot.MOD_ID)
 public final class TooltipHandler {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public static void onItemTooltip(ItemTooltipEvent event) {
@@ -25,13 +25,13 @@ public final class TooltipHandler {
 		
 		Player player = event.getEntity();
 		if (player == null) return;
-		
-		Item food = event.getItemStack().getItem();
-		if (!food.isEdible()) return;
+
+		ItemStack food = event.getItemStack();
+		if (food.getFoodProperties(player) == null) return;
 		
 		FoodList foodList = FoodList.get(player);
 		boolean hasBeenEaten = foodList.hasEaten(food);
-		boolean isAllowed = SOLCarrotConfig.isAllowed(food);
+		boolean isAllowed = SOLCarrotConfig.isAllowed(food.getItem());
 		boolean isHearty = SOLCarrotConfig.isHearty(food);
 		
 		var tooltip = event.getToolTip();
