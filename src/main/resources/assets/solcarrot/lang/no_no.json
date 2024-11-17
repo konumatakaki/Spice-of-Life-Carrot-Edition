@@ -68,5 +68,7 @@
 	"config.solcarrot.food_blacklist": "Svarteliste",
 	"config.solcarrot.food_whitelist": "Hviteliste (slår av svarteliste)",
 	"config.solcarrot.minimum_food_value": "Minimum næringsverdi",
-	"config.solcarrot.reset_on_death": "Nullstill ved dødsfall"
+	"config.solcarrot.reset_on_death": "Nullstill ved dødsfall",
+
+	"solcarrot.networking.food_list_message.failed": "Failed to synchronize food list! %s"
 }

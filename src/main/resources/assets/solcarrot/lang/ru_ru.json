@@ -68,5 +68,7 @@
 	"config.solcarrot.food_blacklist": "Чёрный список",
 	"config.solcarrot.food_whitelist": "Белый список (отключает чёрный список)",
 	"config.solcarrot.minimum_food_value": "Мин. питательность",
-	"config.solcarrot.reset_on_death": "Сбросить при смерти"
+	"config.solcarrot.reset_on_death": "Сбросить при смерти",
+
+	"solcarrot.networking.food_list_message.failed": "Failed to synchronize food list! %s"
 }

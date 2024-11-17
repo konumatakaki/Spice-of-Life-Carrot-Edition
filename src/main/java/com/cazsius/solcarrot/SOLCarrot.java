@@ -1,6 +1,7 @@
 package com.cazsius.solcarrot;
 
 import com.cazsius.solcarrot.communication.FoodListMessage;
+import com.cazsius.solcarrot.communication.handler.ClientPayloadHandler;
 import com.cazsius.solcarrot.item.SOLCarrotItems;
 import com.cazsius.solcarrot.tracking.FoodList;
 import net.minecraft.resources.ResourceLocation;
@@ -41,7 +42,7 @@ public final class SOLCarrot {
 	public static void setUp(RegisterPayloadHandlersEvent event) {
 		final PayloadRegistrar registrar = event.registrar(MOD_ID);
 
-		registrar.playToClient(FoodListMessage.ID, FoodListMessage.CODEC, FoodListMessage.Handler::handle);
+		registrar.playToClient(FoodListMessage.ID, FoodListMessage.CODEC, ClientPayloadHandler.getInstance()::handleFoodList);
 	}
 	
 	public SOLCarrot(IEventBus eventBus, ModContainer container, Dist dist) {

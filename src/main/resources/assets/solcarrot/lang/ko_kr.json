@@ -68,5 +68,7 @@
 	"config.solcarrot.food_blacklist": "블랙리스트",
 	"config.solcarrot.food_whitelist": "화이트리스트 (블랙리스트를 비활성화함)",
 	"config.solcarrot.minimum_food_value": "최소 배고픔 제공 수치",
-	"config.solcarrot.reset_on_death": "죽으면 초기화"
+	"config.solcarrot.reset_on_death": "죽으면 초기화",
+
+	"solcarrot.networking.food_list_message.failed": "Failed to synchronize food list! %s"
 }

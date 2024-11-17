@@ -71,5 +71,7 @@
 	"config.solcarrot.food_blacklist": "黑名单",
 	"config.solcarrot.food_whitelist": "白名单(禁用黑名单)",
 	"config.solcarrot.minimum_food_value": "最低食用价值",
-	"config.solcarrot.reset_on_death": "死亡重置"
+	"config.solcarrot.reset_on_death": "死亡重置",
+
+	"solcarrot.networking.food_list_message.failed": "Failed to synchronize food list! %s"
 }

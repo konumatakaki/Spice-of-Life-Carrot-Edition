@@ -68,5 +68,7 @@
 	"config.solcarrot.food_blacklist": "Blacklist",
 	"config.solcarrot.food_whitelist": "Whitelist (deaktiviert Blacklist)",
 	"config.solcarrot.minimum_food_value": "Mindestwert für Lebensmittel",
-	"config.solcarrot.reset_on_death": "Nach dem Tod zurücksetzen"
+	"config.solcarrot.reset_on_death": "Nach dem Tod zurücksetzen",
+
+	"solcarrot.networking.food_list_message.failed": "Failed to synchronize food list! %s"
 }
