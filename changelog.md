@@ -1,0 +1,1 @@
+* Fix class-loading crash on Dedicated server startup
