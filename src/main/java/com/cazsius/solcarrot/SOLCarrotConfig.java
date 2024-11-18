@@ -143,12 +143,12 @@ public final class SOLCarrotConfig {
 			blacklist = builder
 				.translation(localizationPath("blacklist"))
 				.comment("Foods in this list won't affect the player's health nor show up in the food book.")
-				.defineList("blacklist", Lists.newArrayList(), () -> "", e -> e instanceof String);
+				.defineListAllowEmpty("blacklist", Lists.newArrayList(), () -> "", e -> e instanceof String);
 			
 			whitelist = builder
 				.translation(localizationPath("whitelist"))
 				.comment("When this list contains anything, the blacklist is ignored and instead only foods from here count.")
-				.defineList("whitelist", Lists.newArrayList(), () -> "", e -> e instanceof String);
+				.defineListAllowEmpty("whitelist", Lists.newArrayList(), () -> "", e -> e instanceof String);
 			
 			minimumFoodValue = builder
 				.translation(localizationPath("minimum_food_value"))
