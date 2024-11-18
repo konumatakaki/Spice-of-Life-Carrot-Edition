@@ -1,5 +1,6 @@
 package com.cazsius.solcarrot;
 
+import com.cazsius.solcarrot.communication.ConstructFoodsMessage;
 import com.cazsius.solcarrot.communication.FoodListMessage;
 import com.cazsius.solcarrot.communication.handler.ClientPayloadHandler;
 import com.cazsius.solcarrot.item.SOLCarrotItems;
@@ -43,6 +44,7 @@ public final class SOLCarrot {
 		final PayloadRegistrar registrar = event.registrar(MOD_ID);
 
 		registrar.playToClient(FoodListMessage.ID, FoodListMessage.CODEC, ClientPayloadHandler.getInstance()::handleFoodList);
+		registrar.playToClient(ConstructFoodsMessage.ID, ConstructFoodsMessage.CODEC, ClientPayloadHandler.getInstance()::handleConstructFoods);
 	}
 	
 	public SOLCarrot(IEventBus eventBus, ModContainer container, Dist dist) {

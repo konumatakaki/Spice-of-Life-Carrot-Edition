@@ -1,10 +1,12 @@
 package com.cazsius.solcarrot;
 
+import com.cazsius.solcarrot.communication.ConstructFoodsMessage;
 import com.cazsius.solcarrot.tracking.CapabilityHandler;
 import com.cazsius.solcarrot.tracking.FoodList;
 import com.google.common.collect.Lists;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -19,6 +21,8 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
 import net.neoforged.neoforge.common.ModConfigSpec.Builder;
 import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -58,8 +62,16 @@ public final class SOLCarrotConfig {
 		container.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
 		container.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC);
 
+		NeoForge.EVENT_BUS.addListener(SOLCarrotConfig::onLoggedIn);
+
 		if (dist.isClient()) {
 			container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+		}
+	}
+
+	public static void onLoggedIn(PlayerLoggedInEvent event) {
+		if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+			serverPlayer.connection.send(new ConstructFoodsMessage());
 		}
 	}
 	

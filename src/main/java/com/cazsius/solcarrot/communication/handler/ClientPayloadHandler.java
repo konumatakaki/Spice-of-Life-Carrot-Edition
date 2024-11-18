@@ -1,5 +1,7 @@
 package com.cazsius.solcarrot.communication.handler;
 
+import com.cazsius.solcarrot.client.FoodItems;
+import com.cazsius.solcarrot.communication.ConstructFoodsMessage;
 import com.cazsius.solcarrot.communication.FoodListMessage;
 import com.cazsius.solcarrot.tracking.FoodList;
 import net.minecraft.network.chat.Component;
@@ -23,6 +25,15 @@ public class ClientPayloadHandler {
 				.exceptionally(e -> {
 					// Handle exception
 					context.disconnect(Component.translatable("solcarrot.networking.food_list_message.failed", e.getMessage()));
+					return null;
+				});
+	}
+
+	public void handleConstructFoods(final ConstructFoodsMessage message, final IPayloadContext context) {
+		context.enqueueWork(FoodItems::setUp)
+				.exceptionally(e -> {
+					// Handle exception
+					context.disconnect(Component.translatable("solcarrot.networking.construct_foods_message.failed", e.getMessage()));
 					return null;
 				});
 	}

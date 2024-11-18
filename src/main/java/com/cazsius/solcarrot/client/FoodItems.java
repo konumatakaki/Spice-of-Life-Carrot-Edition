@@ -11,7 +11,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
-import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,9 +35,12 @@ public final class FoodItems {
 	public static List<Item> getAllFoods() {
 		return new ArrayList<>(foods);
 	}
-	
-	@SubscribeEvent
-	public static void setUp(FMLLoadCompleteEvent event) {
+
+	/**
+	 * Constructs a list of all food items that are allowed to be eaten,
+	 * And applies the blacklist from the config after the list is constructed.
+	 */
+	public static void setUp() {
 		foodsBeforeBlacklist = BuiltInRegistries.ITEM.stream()
 			.filter((item) -> item.getDefaultInstance().getFoodProperties(null) != null)
 			// sort by name
