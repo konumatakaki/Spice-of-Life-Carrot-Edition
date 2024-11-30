@@ -52,7 +52,7 @@ public final class FoodItems {
 	}
 	
 	@SubscribeEvent
-	public static void onConfigUpdate(ModConfigEvent event) {
+	public static void onConfigUpdate(ModConfigEvent.Reloading event) {
 		if (event.getConfig().getType() == ModConfig.Type.CLIENT) return;
 		
 		isConfigLoaded = true;
