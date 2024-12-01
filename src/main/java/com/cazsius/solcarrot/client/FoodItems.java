@@ -50,13 +50,18 @@ public final class FoodItems {
 		// depending on the other mods involved, config might be loaded before or after this event
 		tryApplyBlacklist();
 	}
-	
+
+	@SubscribeEvent
+	public static void onConfigLoad(ModConfigEvent.Loading event) {
+		if (event.getConfig().getType() == ModConfig.Type.CLIENT) return;
+
+		isConfigLoaded = true;
+	}
+
 	@SubscribeEvent
 	public static void onConfigUpdate(ModConfigEvent.Reloading event) {
 		if (event.getConfig().getType() == ModConfig.Type.CLIENT) return;
-		
-		isConfigLoaded = true;
-		
+
 		tryApplyBlacklist();
 	}
 	
