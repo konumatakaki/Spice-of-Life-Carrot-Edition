@@ -1,1 +1,1 @@
-* Fix an issue with stopping servers. The mod no longer listen to config unloading as by that time server configs aren't available.
+* Fix a crash when opening the book while Patchouli is installed
