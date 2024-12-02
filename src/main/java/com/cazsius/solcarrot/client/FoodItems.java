@@ -24,8 +24,7 @@ import static net.neoforged.fml.common.EventBusSubscriber.Bus.MOD;
 public final class FoodItems {
 	private static List<Item> foodsBeforeBlacklist;
 	private static List<Item> foods;
-	private static boolean isConfigLoaded = false;
-	
+
 	/** @return a list of all item stacks that can be eaten, including blacklisted/hidden ones */
 	public static List<Item> getAllFoodsIgnoringBlacklist() {
 		return new ArrayList<>(foodsBeforeBlacklist);
@@ -54,8 +53,6 @@ public final class FoodItems {
 	@SubscribeEvent
 	public static void onConfigLoad(ModConfigEvent.Loading event) {
 		if (event.getConfig().getType() == ModConfig.Type.CLIENT) return;
-
-		isConfigLoaded = true;
 	}
 
 	@SubscribeEvent
@@ -67,8 +64,8 @@ public final class FoodItems {
 	
 	private static void tryApplyBlacklist() {
 		if (foodsBeforeBlacklist == null) return;
-		if (!isConfigLoaded) return;
-		
+		if (!SOLCarrotConfig.SERVER_SPEC.isLoaded()) return;
+
 		foods = foodsBeforeBlacklist.stream()
 			.filter(SOLCarrotConfig::isAllowed)
 			.collect(Collectors.toList());
