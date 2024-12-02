@@ -1,1 +1,1 @@
-* Fix a crash when opening the book while Patchouli is installed
+* Fix a crash when opening the book in a server
